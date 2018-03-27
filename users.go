@@ -1,4 +1,5 @@
-// nixtools is a toolkit for linux system operations
+// Package nixtools is a toolkit for various linux
+// system operations.
 package nixtools
 
 import (
