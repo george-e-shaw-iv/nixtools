@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"io"
+	"os"
 )
 
 // Function GetUser takes either an ID or Username
@@ -47,6 +48,33 @@ func GetUser(identifier interface{}, createIfNotExist bool) (*User, error) {
 	}
 
 	return nil, errors.New("identifier must be a valid user id (int) or username (string)")
+}
+
+// Function WriteFile writes to a file with a given mode that
+// is set by flags (flag parameter) that are defined within the
+// os package. The filePath is relative to the current user's
+// home directory. The perm parameter is in the format of linux
+// file permissions (e.g. 0664).
+func (u *User) WriteFile(filePath string, flag int, perm os.FileMode, content []byte) (error) {
+	f, err := os.OpenFile("/home/"+u.Name+"/"+filePath, flag, perm)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	n, err := f.Write(content)
+	if err != nil {
+		return err
+	}
+
+	if n != len(content) {
+		f.Close()
+		_ = os.Remove("/home/"+u.Name+"/"+filePath)
+
+		return errors.New("full length of content was not able to be written, file was attempted to be deleted")
+	}
+
+	return nil
 }
 
 // Function Delete will attempt to delete the given user
