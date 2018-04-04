@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"io"
 	"os"
+	"strings"
 )
 
 // Function GetUser takes either an ID or Username
@@ -81,29 +82,23 @@ func (u *User) WriteFile(filePath string, flag int, perm os.FileMode, content []
 // attached to the struct. deleteOwnedFiles parameter
 // will remove all files owned by the user and
 // removeHome parameter will delete the home directory
-// of the user.
-func (u *User) Delete(deleteOwnedFiles, removeHome bool) (error) {
+// of the user. Warning: parameter deleteOwnedFiles will
+// cause the function to take awhile to execute, consider
+// using a goroutine to prevent your program from stalling.
+func (u *User) Delete(removeHome, deleteOwnedFiles bool) (error) {
 	var stderr bytes.Buffer
-	var args []string
+	var args = []string{
+		"--quiet",
+	}
 
 	if deleteOwnedFiles {
-		args = []string{
-			"--quiet",
-			"--remove-all-files",
-			u.Name,
-		}
-	} else if removeHome {
-		args = []string{
-			"--quiet",
-			"--remove-home",
-			u.Name,
-		}
-	} else {
-		args = []string{
-			"--quiet",
-			u.Name,
-		}
+		args = append(args, "--remove-all-files")
 	}
+	if removeHome {
+		args = append(args, "--remove-home")
+	}
+
+	args = append(args, u.Name)
 
 	// Delete the user and try to remove all files associated
 	cmd := exec.Command("deluser", args...)
@@ -192,7 +187,9 @@ func getUserID(username string) (int, error) {
 		return -1, errors.New(stderr.String())
 	}
 
-	id, err := strconv.Atoi(stdout.String())
+	stdoutParsed := strings.Replace(stdout.String(), "\n", "", -1)
+
+	id, err := strconv.Atoi(stdoutParsed)
 	if err != nil {
 		return -1, err
 	}
