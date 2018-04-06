@@ -51,6 +51,14 @@ func GetUser(identifier interface{}, createIfNotExist bool) (*User, error) {
 	return nil, errors.New("identifier must be a valid user id (int) or username (string)")
 }
 
+// Function CreateDirectory attempts to create a directory along
+// with all of its parent directories (if needed) relative to the
+// user's home directory. The perm parameter is in the format of linux
+// file permissions (e.g. 0664).
+func (u *User) CreateDirectory(dirPath string, perm os.FileMode) (error) {
+	return os.MkdirAll("/home/"+u.Name+"/"+dirPath, perm)
+}
+
 // Function WriteFile writes to a file with a given mode that
 // is set by flags (flag parameter) that are defined within the
 // os package. The filePath is relative to the current user's
@@ -76,6 +84,12 @@ func (u *User) WriteFile(filePath string, flag int, perm os.FileMode, content []
 	}
 
 	return nil
+}
+
+// Function DeleteFileOrDirectory attempts to delete a named
+// file or directory relative to the user's home directory.
+func (u *User) DeleteFileOrDirectory(path string) (error) {
+	return os.RemoveAll("/home/"+u.Name+"/"+path)
 }
 
 // Function Delete will attempt to delete the given user
